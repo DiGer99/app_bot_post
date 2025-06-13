@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from src.config.config import SECRET_KEY, ALGORITHM
 import jwt
 import bcrypt
+from copy import deepcopy
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):

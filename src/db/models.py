@@ -10,7 +10,12 @@ from sqlalchemy.orm import (
 )
 
 url = "sqlite:///users_posts.db"
-engine = create_engine(url)
+engine = create_engine(
+    url,
+    connect_args={"check_same_thread": False},
+    future=True,
+    echo=False
+)
 
 
 class Base(DeclarativeBase):
@@ -25,7 +30,7 @@ class Post(Base):
     text: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(default=datetime.now(UTC), nullable=False)
 
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship("User", back_populates="posts")
 
 

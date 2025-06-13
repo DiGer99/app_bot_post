@@ -1,50 +1,25 @@
-from fastapi import FastAPI, Form
-from src.db.requests import (
-    add_post_db,
-    get_all_posts_db,
-    edit_post_db,
-    delete_post_db
-)
+from fastapi import FastAPI
+
+from src.app.admin_panel import PostAdmin, admin_router
+from src.app.crud_endpoints import crud_router
+from src.db.models import engine
+from src.config.config import SECRET_KEY
 from src.reg.registration import reg_router
+from src.app.admin_panel import AdminAuth
+
 import uvicorn
+from starlette.middleware.sessions import SessionMiddleware
+from sqladmin import Admin
+
 
 app = FastAPI()
 app.include_router(reg_router)
+app.include_router(crud_router)
+app.include_router(admin_router)
 
-
-@app.post("/add")
-def add_post(
-        header=Form(),
-        body=Form()
-):
-    add_post_db(header=header, body=body)
-    return {"message": "post added"}
-
-
-@app.get("/get")
-def get_posts():
-    return get_all_posts_db()
-
-
-@app.post("/edit")
-def edit_post(
-        header=Form(),
-        body=Form(),
-        post_id=Form()
-):
-    edit_post_db(
-        header=header,
-        body=body,
-        post_id=post_id
-    )
-
-    return {"message": "post updated"}
-
-
-@app.post("/delete")
-def delete_post(post_id: int):
-    delete_post_db(post_id=post_id)
-    return {"message": "post successfully deleted"}
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+admin = Admin(app, engine, authentication_backend=AdminAuth(SECRET_KEY))
+admin.add_view(PostAdmin)
 
 
 if __name__ == "__main__":

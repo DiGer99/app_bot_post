@@ -6,7 +6,7 @@ class PostSchema(BaseModel):
     text: str
 
 class UserSchema(BaseModel):
-    login: EmailStr = Field(description="Email")
+    login: str = Field(description="email")
     password: str = Field(min_length=8, max_length=20, description="Password from 8 to 20 characters")
 
 

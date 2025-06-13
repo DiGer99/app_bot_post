@@ -19,9 +19,9 @@ def get_session(func):
 def add_post_db(session, header: str, body: str, user: User | None = None):
     post = Post(
         header=header,
-        text=body
+        text=body,
+        user = user
     )
-    # post.user = user
     session.add(post)
     session.commit()
 
@@ -64,10 +64,10 @@ def add_new_user_login_pwd(session, user: User):
 @get_session
 def authenticate_user(
         session: Session,
-        email: str,
+        login: str,
         password: str
 ):
-    stmt = select(User).where(User.login==email)
+    stmt = select(User).where(User.login == login)
     user = session.execute(stmt).scalar()
     if not user:
         raise HTTPException(
@@ -79,4 +79,14 @@ def authenticate_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid token error"
         )
+    return user
+
+
+@get_session
+def get_user_db(
+        session: Session,
+        user_id: int
+):
+    stmt = select(User).where(User.id==user_id)
+    user = session.execute(stmt).scalar()
     return user
