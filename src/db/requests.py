@@ -26,23 +26,31 @@ def add_post_db(session, header: str, body: str, user: User | None = None):
 
 
 @get_session
-def get_all_posts_db(session):
-    stmt = select(Post)
+def get_all_posts_db(session: Session, user_id: int):
+    stmt = select(Post).where(Post.user_id == user_id)
     res = [post for post in session.scalars(stmt)]
     return res
 
 
 @get_session
-def edit_post_db(session, header: str, body: str, post_id: int):
-    stmt = update(Post).where(Post.id == post_id).values(header=header, text=body)
-    session.execute(stmt)
+def edit_post_db(session, user_id: int, header: str, body: str, post_id: int):
+    stmt = update(Post).where(Post.id == post_id, Post.user_id == user_id).values(header=header, text=body)
+    res = session.execute(stmt)
+
+    if res.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Пост не найден или не принадлежит пользователю")
+
     session.commit()
 
 
 @get_session
-def delete_post_db(session, post_id: int):
-    stmt = delete(Post).where(Post.id == post_id)
-    session.execute(stmt)
+def delete_post_db(session, user_id: int, post_id: int):
+    stmt = delete(Post).where(Post.id == post_id, Post.user_id == user_id)
+    res = session.execute(stmt)
+
+    if res.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Пост не найден или не принадлежит пользователю")
+
     session.commit()
 
 
@@ -89,10 +97,10 @@ def generate_bind_code(session: Session, login: str) -> str:
     session.commit()
     return code
 
-
+#!!!! scalar query
 @get_session
 def bind_tg_to_api(session: Session, code: str, tg_id: int):
-    user = session.query(User).filter(User.bind_tg_code == code).first()
+    user = session.execute(select(User).where(User.bind_tg_code == code)).scalar()
     if not user:
         return "Код недействителен или не найден"
         # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="code not found")

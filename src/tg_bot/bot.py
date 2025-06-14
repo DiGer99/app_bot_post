@@ -1,11 +1,10 @@
 import asyncio
 from src.config.config import BOT_TOKEN
 from aiogram import Bot, Dispatcher, F
-import requests
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery
 from src.tg_bot.keyboards import create_inline_keyboard
-from src.db.requests import get_post_from_header, bind_tg_to_api
+from src.db.requests import get_post_from_header, bind_tg_to_api, get_posts_user, get_user_from_tg_id
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -23,27 +22,20 @@ async def code_bind_to_api(message: Message):
 
 @dp.message(Command("posts"))
 async def command_posts_press(message: Message):
-    response = requests.get(
-        url=f"http://localhost:8000/reg/bind-telegram/{message.from_user.id}",
-    )
-    if response.status_code == 200:
-        posts = response.json()
-        headers = [post["header"] for post in posts]
-        if not posts:
-            await message.answer(text="У вас пока нет постов")
-        else:
-            await message.answer(
+    user = get_user_from_tg_id(tg_id=message.from_user.id)
+    posts = get_posts_user(user_id=user.id)
+    headers = [p.header for p in posts]
+    await message.answer(
                 text="Ваши посты:",
                 reply_markup=create_inline_keyboard(2, *headers)
             )
-    else:
-        await message.answer("Не удалось получить посты")
 
 
 @dp.callback_query()
 async def process_search_post_from_header(callback: CallbackQuery):
     post = get_post_from_header(callback.from_user.id, callback.data)
     await callback.message.answer(text=f"{post.text}\n{post.created_at:%d.%m.%Y %H:%M}")
+    await callback.answer()
 
 
 async def main():

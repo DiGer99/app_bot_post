@@ -45,5 +45,5 @@ class User(Base):
     posts: Mapped[List["Post"]] = relationship("Post", back_populates="user")
 
 
-Base.metadata.create_all(bind=engine)
-
+def db_main():
+    Base.metadata.create_all(bind=engine)

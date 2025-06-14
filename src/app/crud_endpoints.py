@@ -14,7 +14,7 @@ from src.reg.registration import verify_token
 
 log = logging.getLogger(__name__)
 
-crud_router = APIRouter()
+crud_router = APIRouter(tags=["crud"])
 # dependencies=[Depends(verify_token)]
 
 
@@ -23,7 +23,6 @@ def add_post(
     user_id: int = Depends(verify_token), header: str = Form(), body: str = Form()
 ):
     user = get_user_db(user_id=user_id)
-    log.info(f"[x] - {user.id=}")
     add_post_db(
         header=header,
         body=body,
@@ -34,15 +33,14 @@ def add_post(
 
 @crud_router.get("/get")
 def get_posts(user_id: int = Depends(verify_token)):
-    return get_all_posts_db()
+    return get_all_posts_db(user_id=user_id)
 
 
 @crud_router.post("/edit")
 def edit_post(
     user_id: int = Depends(verify_token), header=Form(), body=Form(), post_id=Form()
 ):
-    edit_post_db(header=header, body=body, post_id=post_id)
-
+    edit_post_db(user_id=user_id, header=header, body=body, post_id=post_id)
     return {"message": "post updated"}
 
 
@@ -51,5 +49,5 @@ def delete_post(
     post_id: int,
     user_id: int = Depends(verify_token),
 ):
-    delete_post_db(post_id=post_id)
+    delete_post_db(user_id=user_id, post_id=post_id)
     return {"message": "post successfully deleted"}

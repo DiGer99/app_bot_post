@@ -13,8 +13,7 @@ from fastapi.responses import RedirectResponse
 from src.config.config import SECRET_KEY, ALGORITHM
 from src.schemes.schemes import UserSchema, Token
 from src.reg.utils import hash_password, create_access_token
-from src.db.requests import add_new_user_login_pwd, authenticate_user, bind_tg_to_api, get_user_from_tg_id, \
-    get_posts_user, generate_bind_code, get_user_db, get_user_db_by_login
+from src.db.requests import add_new_user_login_pwd, authenticate_user
 from src.db.models import User
 
 import logging
@@ -52,15 +51,6 @@ def registration_user(login: str = Form(), password: str = Form()):
     add_new_user_login_pwd(hashed_user)
 
     return {"message": code}
-
-
-@reg_router.get("/bind-telegram/{telegram_id}")
-def get_posts_from_tg_id(telegram_id: int):
-    user = get_user_from_tg_id(tg_id=telegram_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    posts = get_posts_user(user_id=user.id)
-    return [{"header": p.header, "body": p.text} for p in posts]
 
 
 @reg_router.post("/auth/token")
