@@ -26,13 +26,15 @@ admin_router = APIRouter()
 
 @admin_router.get("/admin/login")
 def login_form():
-    return HTMLResponse("""
+    return HTMLResponse(
+        """
         <form method="post">
             <input name="username" />
             <input type="password" name="password" />
             <button type="submit">Login</button>
         </form>
-    """)
+    """
+    )
 
 
 @admin_router.post("/admin/login")
@@ -41,5 +43,3 @@ def login_post(request: Request, username: str = Form(), password: str = Form())
         request.session["admin_logged_in"] = True
         return RedirectResponse("/admin", status_code=HTTP_302_FOUND)
     return HTMLResponse("Invalid credentials", status_code=401)
-
-

@@ -11,10 +11,7 @@ from sqlalchemy.orm import (
 
 url = "sqlite:///users_posts.db"
 engine = create_engine(
-    url,
-    connect_args={"check_same_thread": False},
-    future=True,
-    echo=False
+    url=url
 )
 
 
@@ -28,7 +25,9 @@ class Post(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     header: Mapped[str] = mapped_column(String(30))
     text: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now(UTC), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        default=datetime.now(UTC), nullable=False
+    )
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship("User", back_populates="posts")
@@ -38,10 +37,13 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    login: Mapped[str] = mapped_column(unique=True)
-    password: Mapped[bytes]
+    login: Mapped[str] = mapped_column(unique=True, nullable=False)
+    password: Mapped[bytes] = mapped_column(nullable=False)
+    tg_id: Mapped[int] = mapped_column(unique=True, nullable=True)
+    bind_tg_code: Mapped[str] = mapped_column(unique=True, nullable=True)
 
     posts: Mapped[List["Post"]] = relationship("Post", back_populates="user")
 
 
 Base.metadata.create_all(bind=engine)
+

@@ -1,19 +1,20 @@
+import random
 from datetime import timedelta
-
 import jwt
 from fastapi import APIRouter, Form, Depends
-from fastapi.security import HTTPBearer, OAuth2PasswordBearer, HTTPAuthorizationCredentials
-from pydantic import EmailStr
+from fastapi.security import (
+    HTTPBearer,
+    HTTPAuthorizationCredentials,
+)
 from fastapi.exceptions import HTTPException
 from starlette import status
-
-from fastapi import Request
-from sqladmin.authentication import AuthenticationBackend
+from fastapi.responses import RedirectResponse
 
 from src.config.config import SECRET_KEY, ALGORITHM
 from src.schemes.schemes import UserSchema, Token
-from src.reg.utils import hash_password, validate_password, create_access_token
-from src.db.requests import add_new_user_login_pwd, authenticate_user
+from src.reg.utils import hash_password, create_access_token
+from src.db.requests import add_new_user_login_pwd, authenticate_user, bind_tg_to_api, get_user_from_tg_id, \
+    get_posts_user, generate_bind_code, get_user_db, get_user_db_by_login
 from src.db.models import User
 
 import logging
@@ -26,15 +27,11 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def verify_token(
-        # token: str = Depends(oauth2_scheme),
-        credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+    # token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ):
     token = credentials.credentials
-    payload = jwt.decode(
-        token,
-        SECRET_KEY,
-        algorithms=[ALGORITHM]
-    )
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     user_id: int = int(payload.get("sub"))
     if user_id is None:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -43,41 +40,55 @@ def verify_token(
 
 
 @reg_router.post("")
-def registration_user(
-        login: str = Form(),
-        password: str = Form()
-):
-    user: UserSchema = UserSchema(
-        login=login,
-        password=password
-    )
-
+def registration_user(login: str = Form(), password: str = Form()):
+    user: UserSchema = UserSchema(login=login, password=password)
+    code = str(random.randint(100000, 999999))
     hash_pwd: bytes = hash_password(user.password)
     hashed_user: User = User(
-        phone=user.login,
-        password=hash_pwd
+        login=user.login,
+        password=hash_pwd,
+        bind_tg_code=code
     )
+    add_new_user_login_pwd(hashed_user)
 
-    add_new_user_login_pwd(
-        hashed_user
-    )
-    return {"message": "User registered"}
+    return {"message": code}
+    # url = f"http://localhost:8000/reg/get-code?login={user.login}"
+#     return RedirectResponse(url=url)
+#
+#
+# @reg_router.get("/get-code")
+# def get_code_to_user(login: str):
+#     user = get_user_db_by_login(login=login)
+#     code = generate_bind_code(user_id=user.id)
+#     return {
+#         "message": f"your code to telegram bind: {code}",
+#         "link": "https://t.me/for_post_get_bot"
+#     }
+
+
+# @reg_router.post("/bind-telegram/")
+# def bind_telegram(code: str, tg_id: int):
+#     bind_tg_to_api(code=code, tg_id=tg_id)
+#     return {"message": "Telegram bind"}
+
+
+@reg_router.get("/bind-telegram/{telegram_id}")
+def get_posts_from_tg_id(telegram_id: int):
+    user = get_user_from_tg_id(tg_id=telegram_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    posts = get_posts_user(user_id=user.id)
+    return [{"header": p.header, "body": p.text} for p in posts]
 
 
 @reg_router.post("/auth/token")
 async def login_for_access_token(
-        # user: UserSchema = Depends(authenticate_user),
-        login: str = Form(),
-        password: str = Form()
+    # user: UserSchema = Depends(authenticate_user),
+    login: str = Form(),
+    password: str = Form(),
 ) -> Token:
-    user_sch = UserSchema(
-        login=login,
-        password=password
-    )
-    user = authenticate_user(
-        user_sch.login,
-        user_sch.password
-    )
+    user_sch = UserSchema(login=login, password=password)
+    user = authenticate_user(user_sch.login, user_sch.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -86,12 +97,6 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=15)
     access_token = create_access_token(
-        data={
-            "sub": str(user.id)
-        },
-        expires_delta=access_token_expires
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
-    return Token(
-        access_token=access_token,
-        token_type="bearer"
-    )
+    return Token(access_token=access_token, token_type="bearer")

@@ -16,20 +16,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def hash_password(
-        password: str
-) -> bytes:
+def hash_password(password: str) -> bytes:
     salt = bcrypt.gensalt()
     pwd_bytes = password.encode()
 
     return bcrypt.hashpw(pwd_bytes, salt)
 
 
-def validate_password(
-        password: str,
-        hashed_password: bytes
-) -> bool:
-    return bcrypt.checkpw(
-        password.encode(),
-        hashed_password
-    )
+def validate_password(password: str, hashed_password: bytes) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed_password)

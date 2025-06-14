@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from src.app.admin_panel import PostAdmin, admin_router
 from src.app.crud_endpoints import crud_router
-from src.db.models import engine
+from src.db.models import engine, Base
 from src.config.config import SECRET_KEY
 from src.reg.registration import reg_router
 from src.app.admin_panel import AdminAuth
