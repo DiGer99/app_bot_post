@@ -52,24 +52,6 @@ def registration_user(login: str = Form(), password: str = Form()):
     add_new_user_login_pwd(hashed_user)
 
     return {"message": code}
-    # url = f"http://localhost:8000/reg/get-code?login={user.login}"
-#     return RedirectResponse(url=url)
-#
-#
-# @reg_router.get("/get-code")
-# def get_code_to_user(login: str):
-#     user = get_user_db_by_login(login=login)
-#     code = generate_bind_code(user_id=user.id)
-#     return {
-#         "message": f"your code to telegram bind: {code}",
-#         "link": "https://t.me/for_post_get_bot"
-#     }
-
-
-# @reg_router.post("/bind-telegram/")
-# def bind_telegram(code: str, tg_id: int):
-#     bind_tg_to_api(code=code, tg_id=tg_id)
-#     return {"message": "Telegram bind"}
 
 
 @reg_router.get("/bind-telegram/{telegram_id}")

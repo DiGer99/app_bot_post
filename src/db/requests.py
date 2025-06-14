@@ -105,17 +105,22 @@ def bind_tg_to_api(session: Session, code: str, tg_id: int):
 
 @get_session
 def get_user_from_tg_id(session: Session, tg_id: int):
-    user = session.execute(select(User).filter(User.tg_id == tg_id)).scalar()
+    user = session.execute(select(User).where(User.tg_id == tg_id)).scalar()
     return user
 
 
 @get_session
 def get_posts_user(session: Session, user_id: int):
-    posts = session.query(Post).filter(Post.user_id == user_id).all()
+    user = session.execute(select(User).where(User.id == user_id)).scalar()
+    posts = user.posts
     return posts
 
 
 @get_session
-def get_post_from_header(session: Session, header: str):
-    post = session.query(Post).filter(Post.header == header)
+def get_post_from_header(session: Session, tg_id: int, header: str):
+    user = get_user_from_tg_id(tg_id=tg_id)
+    post = session.execute(select(Post).where(
+        Post.user_id == user.id,
+        Post.header == header)
+    ).scalar()
     return post
