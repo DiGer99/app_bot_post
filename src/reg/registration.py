@@ -50,7 +50,10 @@ def registration_user(login: str = Form(), password: str = Form()):
     )
     add_new_user_login_pwd(hashed_user)
 
-    return {"message": code}
+    return {
+        "code": code,
+        "message": "https://t.me/for_post_get_bot"
+    }
 
 
 @reg_router.post("/auth/token")
