@@ -5,7 +5,6 @@ from sqladmin import Admin, ModelView
 from src.db.models import Post
 from fastapi import Request, Form, APIRouter
 from fastapi.responses import RedirectResponse, HTMLResponse
-from starlette.status import HTTP_302_FOUND
 from src.config.config import ADMIN_PASSWORD, ADMIN_LOGIN, SECRET_KEY, ALGORITHM
 from sqladmin.authentication import AuthenticationBackend
 

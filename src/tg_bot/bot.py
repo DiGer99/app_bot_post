@@ -5,6 +5,11 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery
 from src.tg_bot.keyboards import create_inline_keyboard
 from src.db.requests import get_post_from_header, bind_tg_to_api, get_posts_user, get_user_from_tg_id
+import logging
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -43,4 +48,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    log.info("Bot on")
     asyncio.run(main())

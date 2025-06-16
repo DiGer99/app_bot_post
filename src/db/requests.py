@@ -97,13 +97,11 @@ def generate_bind_code(session: Session, login: str) -> str:
     session.commit()
     return code
 
-#!!!! scalar query
 @get_session
 def bind_tg_to_api(session: Session, code: str, tg_id: int):
     user = session.execute(select(User).where(User.bind_tg_code == code)).scalar()
     if not user:
         return "Код недействителен или не найден"
-        # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="code not found")
 
     user.tg_id = tg_id
     user.bind_tg_code = None
