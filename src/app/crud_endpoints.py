@@ -36,7 +36,7 @@ def get_posts(user_id: int = Depends(verify_token)):
     return get_all_posts_db(user_id=user_id)
 
 
-@crud_router.post("/edit")
+@crud_router.put("/edit")
 def edit_post(
     user_id: int = Depends(verify_token), header=Form(), body=Form(), post_id=Form()
 ):
@@ -44,7 +44,7 @@ def edit_post(
     return {"message": "post updated"}
 
 
-@crud_router.post("/delete")
+@crud_router.delete("/delete")
 def delete_post(
     post_id: int,
     user_id: int = Depends(verify_token),
